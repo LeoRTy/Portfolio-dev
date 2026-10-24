@@ -37,6 +37,40 @@ body {
     color: transparent;
 }
 
+.palco {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 48px;
+}
+
+.topicos {
+    flex: 0 0 210px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.topicos li {
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: #cfe3ff;
+    text-align: center;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(74, 168, 255, 0.35);
+    background: rgba(74, 168, 255, 0.06);
+}
+
+/* Em telas menores os tópicos somem para não apertar o cartão */
+@media (max-width: 1100px) {
+    .topicos {
+        display: none;
+    }
+}
+
 .cartao {
     width: 100%;
     max-width: 520px;
