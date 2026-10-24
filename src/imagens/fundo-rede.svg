@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="grade" width="44" height="44" patternUnits="userSpaceOnUse">
+      <path d="M44 0H0V44" fill="none" stroke="#78aaff" stroke-opacity="0.035"/>
+    </pattern>
+    <linearGradient id="txt" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4aa8ff"/>
+      <stop offset="0.45" stop-color="#7cc4ff"/>
+      <stop offset="1" stop-color="#2ee6b6"/>
+    </linearGradient>
+    <g id="chip">
+      <rect width="230" height="46" rx="10" fill="#4aa8ff" fill-opacity="0.06" stroke="#4aa8ff" stroke-opacity="0.35"/>
+    </g>
+  </defs>
+  <rect width="1600" height="900" fill="url(#grade)"/>
+
+  <g stroke="#5fb3ff" stroke-opacity="0.13" stroke-width="1.2" fill="none">
+    <path d="M60 60 L220 30 L360 110 L500 50"/>
+    <path d="M220 30 L280 150 L360 110"/>
+    <path d="M120 760 L300 820 L460 740 L560 860"/>
+    <path d="M1100 40 L1260 90 L1420 30 L1560 120"/>
+    <path d="M1260 90 L1330 170 L1420 30"/>
+    <path d="M1060 830 L1240 760 L1400 850 L1560 780"/>
+  </g>
+  <g fill="#5fb3ff" fill-opacity="0.45">
+    <circle cx="60" cy="60" r="3"/><circle cx="220" cy="30" r="3.5"/><circle cx="360" cy="110" r="4"/>
+    <circle cx="500" cy="50" r="3"/><circle cx="280" cy="150" r="4.5"/>
+    <circle cx="120" cy="760" r="3"/><circle cx="300" cy="820" r="4"/><circle cx="460" cy="740" r="3.5"/><circle cx="560" cy="860" r="3"/>
+    <circle cx="1100" cy="40" r="3"/><circle cx="1260" cy="90" r="4"/><circle cx="1420" cy="30" r="3.5"/>
+    <circle cx="1560" cy="120" r="3"/><circle cx="1330" cy="170" r="4.5"/>
+    <circle cx="1060" cy="830" r="3"/><circle cx="1240" cy="760" r="4"/><circle cx="1400" cy="850" r="3.5"/><circle cx="1560" cy="780" r="3"/>
+  </g>
+
+  <g font-family="Consolas, 'Courier New', monospace">
+
+    <g font-size="20" font-weight="700" fill="#cfe3ff" text-anchor="middle">
+      <use href="#chip" x="230" y="300"/><text x="345" y="329">Firewall</text>
+      <use href="#chip" x="230" y="366"/><text x="345" y="395">Redes</text>
+      <use href="#chip" x="230" y="432"/><text x="345" y="461">Servidores</text>
+      <use href="#chip" x="230" y="498"/><text x="345" y="527">Windows</text>
+
+      <use href="#chip" x="1140" y="300"/><text x="1255" y="329">Linux</text>
+      <use href="#chip" x="1140" y="366"/><text x="1255" y="395">Hyper-V</text>
+      <use href="#chip" x="1140" y="432"/><text x="1255" y="461">ERP Protheus</text>
+      <use href="#chip" x="1140" y="498"/><text x="1255" y="527">Automação</text>
+    </g>
+  </g>
+</svg>
