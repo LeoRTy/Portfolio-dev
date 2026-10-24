@@ -31,18 +31,4 @@
     <circle cx="1060" cy="830" r="3"/><circle cx="1240" cy="760" r="4"/><circle cx="1400" cy="850" r="3.5"/><circle cx="1560" cy="780" r="3"/>
   </g>
 
-  <g font-family="Consolas, 'Courier New', monospace">
-
-    <g font-size="20" font-weight="700" fill="#cfe3ff" text-anchor="middle">
-      <use href="#chip" x="230" y="300"/><text x="345" y="329">Firewall</text>
-      <use href="#chip" x="230" y="366"/><text x="345" y="395">Redes</text>
-      <use href="#chip" x="230" y="432"/><text x="345" y="461">Servidores</text>
-      <use href="#chip" x="230" y="498"/><text x="345" y="527">Windows</text>
-
-      <use href="#chip" x="1140" y="300"/><text x="1255" y="329">Linux</text>
-      <use href="#chip" x="1140" y="366"/><text x="1255" y="395">Hyper-V</text>
-      <use href="#chip" x="1140" y="432"/><text x="1255" y="461">ERP Protheus</text>
-      <use href="#chip" x="1140" y="498"/><text x="1255" y="527">Automação</text>
-    </g>
-  </g>
 </svg>
