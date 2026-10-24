@@ -1,24 +1,50 @@
 body {
-    background-image: url(../imagens/fundo-site1.jpg);
+    background-color: #02050b;
+    background-image:
+        url(../imagens/fundo-rede.svg),
+        radial-gradient(ellipse 700px 450px at 50% 45%, #0a1a36 0%, transparent 70%),
+        linear-gradient(180deg, #02050b 0%, #040a16 100%);
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
+    background-attachment: fixed;
 
     font-family: 'VT323', monospace;
     color: #f3f3f3;
     font-size: 18px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 24px;
     min-height: 100vh;
     padding: 30px;
 }
 
+.titulo-topo {
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: clamp(30px, 5vw, 56px);
+    font-weight: 700;
+    color: #e8f0fb;
+    text-align: center;
+    line-height: 1.1;
+}
+
+.titulo-topo span {
+    background: linear-gradient(90deg, #4aa8ff 0%, #7cc4ff 45%, #2ee6b6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
 .cartao {
-    background-color: #070d12;
-    width: 370px;
-    border: 2px solid #00FF00;
-    border-radius: 10px;
+    width: 100%;
+    max-width: 520px;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    background: linear-gradient(#070d12, #070d12) padding-box,
+        linear-gradient(135deg, #4aa8ff, #7cc4ff 45%, #2ee6b6) border-box;
+    box-shadow: 0 0 40px rgba(74, 168, 255, 0.15);
     overflow: hidden;
 }
 
@@ -38,7 +64,7 @@ body {
     width: 96px;
     height: 96px;
     border-radius: 50px;
-    border: 4px solid #02d08f;
+    border: 4px solid #4aa8ff;
 }
 
 .cartao .minhas-informacoes .nome {
@@ -80,7 +106,7 @@ body {
 }
 
 .informacoes-abas .informacao {
-    min-height: 260px;
+    min-height: clamp(260px, calc(100vh - 480px), 440px);
     padding: 15px;
     display: none
 }
@@ -103,7 +129,7 @@ body {
 
 .informacoes-abas .descricao {
     font-size: 20px;
-    max-height: 180px;
+    max-height: clamp(180px, calc(100vh - 560px), 360px);
     overflow-y: auto;
     padding-right: 15px;
 }
@@ -116,11 +142,11 @@ body {
 }
 
 .informacoes-abas .descricao span {
-    color: #02d08f;
+    color: #5fb3ff;
 }
 
 .informacoes-abas .informacao span {
-    color: #02d08f;
+    color: #5fb3ff;
 }
 
 .redes-sociais {
@@ -173,7 +199,19 @@ body {
 
 .meus-projetos {
     font-size: 20px;
-    max-height: 180px;
+    max-height: clamp(180px, calc(100vh - 560px), 360px);
     overflow-y: auto;
     padding: 15px;
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 24px 16px;
+        gap: 16px;
+    }
+
+    .informacoes-abas .descricao,
+    .meus-projetos {
+        max-height: 55vh;
+    }
 }
