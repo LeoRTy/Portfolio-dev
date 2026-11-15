@@ -249,6 +249,21 @@ body.ordenando { user-select: none; }
 /* aviso flutuante */
 #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; width: min(440px, calc(100vw - 32px)); pointer-events: none; }
 .t { background: var(--text); color: var(--bg); border-radius: 12px; padding: 11px 14px; font-size: 14px; box-shadow: var(--shadow); animation: entra .2s ease both; }
+/* rodapé sempre no pé da tela, mesmo com poucos atalhos */
+body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+#app { flex: 1; display: flex; flex-direction: column; }
+#app > .rodape { margin-top: auto; }
+#app > main.wrap { width: 100%; }
+/* crédito: nome e dois botões discretos */
+.cred-linha { display: flex; align-items: center; gap: 8px; }
+.cred-linha b { font-weight: 650; font-size: 14px; color: var(--text); }
+.painel a.cred-bt { width: 22px; height: 22px; border: 1px solid var(--border); border-radius: 5px; display: inline-grid; place-items: center; color: var(--muted); font-size: 11px; font-weight: 700; line-height: 1; text-decoration: none; gap: 0; }
+.painel a.cred-bt:hover { color: var(--accent); border-color: var(--accent); text-decoration: none; }
+.painel a.cred-bt svg { width: 13px; height: 13px; }
+/* quais administradores usam um atalho só de administradores */
+.so-adm { margin: -4px 0 0 46px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 0 0 12px 12px; padding: 10px 14px; font-size: 13.5px; }
+.so-adm b { display: block; margin-bottom: 6px; font-size: 13px; }
+.so-adm .nota-adm { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -262,6 +277,7 @@ body.ordenando { user-select: none; }
     <label class="grp">Perfil
       <select id="d-perfil">
         <option value="admin">Administrador (fixo)</option>
+        <option value="adminTela">Administrador (feito pela tela)</option>
         <option value="colab">Colaborador</option>
         <option value="novo">Pessoa nova (aguarda aprovação)</option>
       </select></label>
@@ -317,19 +333,21 @@ const P = {
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
   grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
-  ext: '<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'
+  ext: '<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  github: '<path d="M9 19c-4.5 1.4-4.5-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12 12 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>'
 };
 const ic = (n, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n] || P.link}</svg>`;
 const ICONES_ATALHO = ["flask", "bot", "headset", "user", "news", "chart", "tools", "link", "db", "file"];
 
 /* ───────────── crédito (constante, igual em todos os templates) ───────────── */
-const CREDITO = { nome: "Leonardo Teixeira", linkedin: "https://br.linkedin.com/in/leonardo-teixeira-3244a6143" };
+const CREDITO = { nome: "Leonardo Teixeira", linkedin: "https://br.linkedin.com/in/leonardo-teixeira-3244a6143", portfolio: "https://leorty.github.io/Portfolio-dev" };
 const LINKEDIN_OK = /^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i;
 
 /* ───────────── estado da demonstração ───────────── */
 const DEPS = ["Comercial", "Diretoria", "Financeiro", "Operações", "Tecnologia da Informação"];
 const PERFIS = {
   admin: { nome: "Administrador Exemplo", email: "admin@empresa.example", dep: "Tecnologia da Informação" },
+  adminTela: { nome: "Usuário Exemplo 04", email: "usuario04@empresa.example", dep: "Diretoria" },
   colab: { nome: "Usuário Exemplo 01", email: "usuario01@empresa.example", dep: "Operações" },
   novo: { nome: "Pessoa Nova Exemplo", email: "pessoa.nova@empresa.example", dep: "" }
 };
@@ -342,6 +360,7 @@ function cenarioNovo() {
       codigo: "SVC-TESTE", icone: "flask", url: "", abrir: "mesma_aba", situacao: "homologacao", modo: "todos", deps: [], fim: false, soAdmin: false }
   ];
   S.liberados = {};
+  S.semAcesso = {};   // atalho só de administradores -> administradores (feitos pela tela) que não usam
   S.pessoas = [
     { ...PERFIS.admin, situacao: "ativo" },
     { ...PERFIS.colab, situacao: "ativo" },
@@ -411,7 +430,7 @@ function ordem() {
   return [...moveis, ...fim];
 }
 function porque(a, email) {
-  if (ehAdmin(email)) return "administrador vê todos";
+  if (ehAdmin(email)) return (a.soAdmin && !ehFixo(email) && (S.semAcesso[a.chave] || []).includes(email)) ? null : "administrador vê todos";
   if (a.soAdmin) return null;
   if ((S.liberados[a.chave] || []).includes(email)) return "liberado para a pessoa";
   const dep = (pessoaDe(email) || {}).dep || "";
@@ -459,7 +478,9 @@ function painelCredito(nome) {
   return `<div class="painel" id="painel-credito" role="dialog" aria-label="Criação e desenvolvimento">
     <button class="x" data-a="fecha-credito" aria-label="Fechar">${ic("x")}</button>
     <h4>${esc(nome)}</h4>
-    ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(CREDITO.nome)} ${ic("ext")}</a>` : `<b>${esc(CREDITO.nome)}</b>`}
+    <div class="cred-linha"><b>${esc(CREDITO.nome)}</b>
+      ${link ? `<a class="cred-bt" href="${esc(link)}" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn de ${esc(CREDITO.nome)}" title="LinkedIn">in</a>` : ""}
+      <a class="cred-bt" href="${esc(CREDITO.portfolio)}" target="_blank" rel="noopener noreferrer" aria-label="Portfólio de ${esc(CREDITO.nome)}" title="Portfólio">${ic("github")}</a></div>
     <p>Desenvolvedor e criador ${nome === "Assistente IA" ? "do Assistente IA" : "da Central de Aplicações"}.</p></div>`;
 }
 
@@ -516,13 +537,23 @@ function admAtalhos() {
       <div class="txt"><div class="tt">${esc(a.titulo)} <span class="pill ${cls}">${txt}</span>${a.url ? "" : ` <span class="pill warn">sem destino</span>`}</div>
         <div class="sub">${esc(regraTexto(a))}${lib ? ` · ${lib} liberado(s) pessoa a pessoa` : ""}${a.fim ? " · sempre por último" : ""}</div></div>
       <button class="btn mini" data-a="editar" data-k="${esc(a.chave)}">Editar</button>
-      <button class="btn mini perigo" data-a="apagar" data-k="${esc(a.chave)}">Apagar</button></div>`;
+      <button class="btn mini perigo" data-a="apagar" data-k="${esc(a.chave)}">Apagar</button></div>${a.soAdmin ? adminsDoAtalho(a) : ""}`;
   }).join("");
   return `${S.ordemPendente ? `<div class="ordem-barra" role="status">${ic("grip")} Ordem alterada, ainda não salva.
       <span class="acoes"><button class="btn mini" data-a="ordem-desfazer">Desfazer</button><button class="btn mini forte" data-a="ordem-salvar">Salvar ordem</button></span></div>` : ""}
     <div class="linha-acoes"><span class="dica">Arraste pela alça (ou use ↑/↓ com a alça em foco). A ordem vale para a página inicial de todos.</span>
       <button class="btn forte" data-a="novo-atalho">${ic("plus")} Novo atalho</button></div>
     <div class="lista" id="lista-atalhos">${linhas || `<div class="vazio">Nenhum atalho. Crie o primeiro em "Novo atalho".</div>`}</div>`;
+}
+/* Atalho só de administradores: um administrador fixo escolhe quais administradores feitos pela tela usam. */
+function adminsDoAtalho(a) {
+  const souFixo = ehFixo(eu().email);
+  const fora = S.semAcesso[a.chave] || [];
+  const nome = (e) => (pessoaDe(e) || {}).nome || e;
+  const linhas = [...fixos.map((e) => ({ e, fixo: true })), ...S.adminsTela.map((e) => ({ e, fixo: false }))].map(({ e, fixo }) =>
+    `<label><input type="checkbox" data-a="admin-atalho" data-k="${esc(a.chave)}" data-p="${esc(e)}" ${fixo || !fora.includes(e) ? "checked" : ""} ${fixo || !souFixo ? "disabled" : ""}> ${esc(nome(e))}${fixo ? " (fixo, usa sempre)" : ""}</label>`).join("");
+  return `<div class="so-adm"><b>Quais administradores usam este atalho</b><div class="chk">${linhas}</div>
+    <div class="nota-adm">${souFixo ? "Por padrão todo administrador usa. Quem for desmarcado deixa de ver o cartão e é barrado no servidor." : "Só um administrador fixo muda esta lista."}</div></div>`;
 }
 function admPessoas() {
   return `<div class="linha-acoes"><span class="dica">Clique numa pessoa para ver o que ela vê e por quê, e para liberar atalhos só para ela.</span>
@@ -862,6 +893,12 @@ document.addEventListener("click", (e) => {
       const lst = S.liberados[k] = S.liberados[k] || []; const pe = el.dataset.p; const titulo = S.atalhos.find((x) => x.chave === k).titulo;
       if (el.checked) { lst.push(pe); registrar(pe, `liberou ${titulo}`); } else { S.liberados[k] = lst.filter((x) => x !== pe); registrar(pe, `tirou ${titulo}`); }
       break; }
+    case "admin-atalho": {
+      if (!ehFixo(eu().email)) { toast("Só um administrador fixo muda esta lista."); return; }
+      const pe = el.dataset.p; const titulo = S.atalhos.find((x) => x.chave === k).titulo; const fora = S.semAcesso[k] = S.semAcesso[k] || [];
+      if (el.checked) { S.semAcesso[k] = fora.filter((x) => x !== pe); registrar(pe, `liberou ${titulo} (atalho só de administradores)`); }
+      else { fora.push(pe); registrar(pe, `tirou ${titulo} (atalho só de administradores)`); }
+      break; }
     case "bloquear": { const pe = pessoaDe(k); pe.situacao = pe.situacao === "bloqueado" ? "ativo" : "bloqueado"; registrar(k, pe.situacao === "bloqueado" ? "bloqueada por um administrador: perdeu os acessos" : "desbloqueada"); break; }
     case "add-pessoa": toast("Nos modos lista de e-mails e domínio, o administrador cadastra e-mail, nome e departamento. Com diretório, as pessoas vêm do AD."); return;
     case "aprovar": { const pd = S.pedidos.find((x) => x.email === k); const dep = $(`[data-dep-de="${CSS.escape(k)}"]`).value;
@@ -869,7 +906,7 @@ document.addEventListener("click", (e) => {
       registrar(k, `pedido de acesso aprovado · departamento ${dep}`); toast(`${pd.nome} aprovado(a). Troque o perfil para "Pessoa nova" para ver a Central dela.`); break; }
     case "recusar": { const pd = S.pedidos.find((x) => x.email === k); S.pedidos = S.pedidos.filter((x) => x !== pd); registrar(k, "pedido de acesso recusado (pode pedir de novo em 7 dias)"); toast("Pedido recusado."); break; }
     case "faz-admin": { const v = $("#novo-admin").value; if (!v) return; S.adminsTela.push(v); registrar(v, "virou administrador da Central"); toast("Administrador adicionado."); break; }
-    case "tira-admin": S.adminsTela = S.adminsTela.filter((x) => x !== k); registrar(k, "deixou de ser administrador da Central"); break;
+    case "tira-admin": S.adminsTela = S.adminsTela.filter((x) => x !== k); Object.keys(S.semAcesso).forEach((c) => { S.semAcesso[c] = S.semAcesso[c].filter((x) => x !== k); }); registrar(k, "deixou de ser administrador da Central"); break;
     case "sync": S.ultimaSync = "agora (" + hhmm() + ")"; registrar("Diretório", "sincronização manual: 0 contas novas, 0 desabilitadas, 0 removidas"); toast("Sincronização concluída: nada mudou."); break;
     case "ir-central": S.produto = "central"; S.tela = "inicio"; S.ladoAberto = false; break;
     case "lado": S.ladoAberto = !S.ladoAberto; break;
@@ -913,7 +950,9 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") { if (formAtalho) { formAtalho = null; render(); } else if (S.credito) { S.credito = null; render(); $(".credito-btn")?.focus(); } }
   if (e.target.id === "pergunta" && e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.target.form.requestSubmit(); }
 });
-$("#d-perfil").addEventListener("change", (e) => { S.perfil = e.target.value; S.tela = S.produto === "ia" ? "ia-chat" : "inicio"; S.ordemPendente = null; render(); });
+$("#d-perfil").addEventListener("change", (e) => { S.perfil = e.target.value;
+  // o administrador feito pela tela só existe no cenário já configurado
+  if (S.perfil === "adminTela" && S.cenario !== "config") { $("#d-cenario").value = "config"; S.cenario = "config"; cenarioConfig(); } S.tela = S.produto === "ia" ? "ia-chat" : "inicio"; S.ordemPendente = null; render(); });
 $("#d-cenario").addEventListener("change", (e) => trocarCenario(e.target.value));
 
 /* links do portfólio: ?app=ia|central e ?cenario=config abrem a demonstração já no ponto certo */
