@@ -281,10 +281,31 @@ body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: col
 .i-bt { display: inline-flex; align-items: center; gap: 7px; border: 0; background: none; padding: 4px 6px 4px 0; color: var(--muted); font-size: 13px; }
 .i-bt svg { width: 17px; height: 17px; color: var(--accent); }
 .i-bt:hover, .i-bt[aria-expanded="true"] { color: var(--accent); }
-.ajuda-caixa { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 12px; padding: 14px 18px; margin: 0 0 16px; font-size: 14px; line-height: 1.55; animation: entra .2s ease both; }
-.ajuda-caixa p { margin: 0 0 8px; font-weight: 600; }
-.ajuda-caixa ul { margin: 0; padding-left: 18px; }
-.ajuda-caixa li { margin: 4px 0; }
+/* ajuda em pop-up (o "i"): abre na frente da tela, com o botão Entendi embaixo */
+.ajuda-fundo { background: rgba(8, 12, 16, .58); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 70; animation: aj-fundo .18s ease both; }
+.janela.ajuda-pop { position: relative; width: min(600px, 100%); max-height: min(640px, calc(100dvh - 32px)); padding: 0; overflow: hidden; display: flex; flex-direction: column; border-radius: 18px; box-shadow: 0 24px 70px rgba(0, 0, 0, .38); animation: aj-entra .22s cubic-bezier(.2, .8, .2, 1) both; }
+.aj-cab { display: flex; align-items: center; gap: 12px; padding: 20px 56px 14px 22px; }
+.aj-ic { width: 38px; height: 38px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.aj-ic svg { width: 21px; height: 21px; }
+.janela.ajuda-pop h2 { margin: 0; font-size: 18px; line-height: 1.25; }
+.aj-x { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border: 0; border-radius: 9px; background: none; color: var(--muted); display: grid; place-items: center; }
+.aj-x:hover { background: var(--surface-2); color: var(--text); }
+.aj-corpo { padding: 0 22px 6px; overflow-y: auto; overscroll-behavior: contain; }
+.aj-resumo { margin: 0 0 12px; color: var(--muted); font-size: 14.5px; line-height: 1.5; }
+.aj-lista { list-style: none; margin: 0; padding: 0; }
+.aj-lista li { position: relative; padding: 10px 0 10px 20px; border-top: 1px solid var(--border); font-size: 14px; line-height: 1.55; }
+.aj-lista li::before { content: ""; position: absolute; left: 3px; top: 18px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.aj-fim { display: flex; justify-content: flex-end; padding: 14px 22px 18px; border-top: 1px solid var(--border); background: var(--surface); }
+.aj-fim .btn { min-width: 120px; justify-content: center; padding: 10px 18px; }
+@keyframes aj-fundo { from { opacity: 0; } to { opacity: 1; } }
+@keyframes aj-entra { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ajuda-fundo, .janela.ajuda-pop { animation: none; } }
+@media (max-width: 560px) {
+  .ajuda-fundo { padding: 0; place-items: end stretch; }
+  .janela.ajuda-pop { width: 100%; max-height: 88dvh; border-radius: 18px 18px 0 0; border-bottom: 0; }
+  .aj-fim { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+  .aj-fim .btn { width: 100%; padding: 12px 18px; }
+}
 </style>
 </head>
 <body>
@@ -565,10 +586,22 @@ const AJUDA = {
     "<b>Backup</b> e <b>Versão</b> no ar."]]
 };
 function ajudaHtml() {
-  const [titulo, resumo, itens] = AJUDA[S.aba] || AJUDA.atalhos;
-  return `<div class="ajuda-linha"><button class="i-bt" data-a="ajuda" aria-expanded="${Boolean(S.ajuda)}" title="Para que serve esta aba">${ic("info")}<span>Para que serve a aba ${esc(titulo)}</span></button></div>
-    ${S.ajuda ? `<div class="ajuda-caixa"><p>${resumo}</p><ul>${itens.map((t) => `<li>${t}</li>`).join("")}</ul></div>` : ""}`;
+  const titulo = (AJUDA[S.aba] || AJUDA.atalhos)[0];
+  return `<div class="ajuda-linha"><button class="i-bt" data-a="ajuda" aria-haspopup="dialog" title="Para que serve esta aba">${ic("info")}<span>Para que serve a aba ${esc(titulo)}</span></button></div>`;
 }
+/* O pop-up da ajuda: abre na frente da tela e fecha no botão Entendi, no X, no Esc ou clicando fora. */
+function ajudaJanela() {
+  if (!S.ajuda || S.produto !== "central" || S.tela !== "admin") return "";
+  const [titulo, resumo, itens] = AJUDA[S.aba] || AJUDA.atalhos;
+  return `<div class="fundo ajuda-fundo" data-a="fecha-ajuda-fundo"><div class="janela ajuda-pop" role="dialog" aria-modal="true" aria-labelledby="aj-t" aria-describedby="aj-r">
+    <button class="aj-x" data-a="fecha-ajuda" aria-label="Fechar">${ic("x")}</button>
+    <div class="aj-cab"><span class="aj-ic">${ic("info")}</span><h2 id="aj-t">Para que serve a aba ${esc(titulo)}</h2></div>
+    <div class="aj-corpo"><p class="aj-resumo" id="aj-r">${resumo}</p>
+      <ul class="aj-lista">${itens.map((t) => `<li>${t}</li>`).join("")}</ul></div>
+    <div class="aj-fim"><button class="btn forte" data-a="fecha-ajuda" id="aj-ok">Entendi</button></div>
+  </div></div>`;
+}
+function fecharAjuda() { S.ajuda = false; render(); $(".i-bt")?.focus(); }
 function abasHtml(abas, atual, attr) {
   return `<div class="abas" role="tablist">${abas.map(([k, t, n]) =>
     `<button role="tab" aria-selected="${k === atual}" data-a="${attr}" data-k="${k}">${t}${n ? ` <span class="cont">${n}</span>` : ""}</button>`).join("")}</div>`;
@@ -893,7 +926,7 @@ function render() {
   else if (!S.logado || situacaoDe(eu().email) === "pendente") html = telaEntrada();
   else if (S.tela === "admin" && ehAdmin(eu().email)) html = telaAdmin();
   else html = telaInicio();
-  app.innerHTML = html + janelaAtalho();
+  app.innerHTML = html + janelaAtalho() + ajudaJanela();
   document.querySelectorAll('[data-demo="produto"]').forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === S.produto)));
   document.title = S.produto === "ia" ? "Assistente IA · demonstração" : "Central de Aplicações · demonstração";
   ligarOrdem();
@@ -922,7 +955,9 @@ document.addEventListener("click", (e) => {
     case "admin": if (S.ordemPendente === null) S.aba = S.aba || "atalhos"; S.tela = "admin"; break;
     case "inicio": if (S.ordemPendente && !confirm("A ordem não foi salva. Sair mesmo assim?")) return; S.ordemPendente = null; S.tela = "inicio"; break;
     case "aba": S.aba = k; break;
-    case "ajuda": S.ajuda = !S.ajuda; break;
+    case "ajuda": S.ajuda = true; render(); $("#aj-ok")?.focus(); return;
+    case "fecha-ajuda": fecharAjuda(); return;
+    case "fecha-ajuda-fundo": if (e.target === el) fecharAjuda(); return;
     case "abrir": {
       const at = S.atalhos.find((x) => x.chave === k);
       if (at.situacao === "manutencao") { toast("Este sistema está em manutenção."); return; }
@@ -1004,7 +1039,7 @@ document.addEventListener("submit", (e) => {
   e.preventDefault(); const t = $("#pergunta"); const v = t.value; t.value = ""; perguntar(v);
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") { if (formAtalho) { formAtalho = null; render(); } else if (S.credito) { S.credito = null; render(); $(".credito-btn")?.focus(); } }
+  if (e.key === "Escape") { if (S.ajuda) fecharAjuda(); else if (formAtalho) { formAtalho = null; render(); } else if (S.credito) { S.credito = null; render(); $(".credito-btn")?.focus(); } }
   if (e.target.id === "pergunta" && e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.target.form.requestSubmit(); }
 });
 $("#d-perfil").addEventListener("change", (e) => { S.perfil = e.target.value;
