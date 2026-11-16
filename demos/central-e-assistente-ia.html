@@ -134,6 +134,7 @@ svg.i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-widt
 .painel-adm { padding: 18px 0 40px; }
 .linha-acoes { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
 .linha-acoes .dica { color: var(--muted); font-size: 13.5px; margin-right: auto; }
+.entrada-linha { flex: 1 1 220px; min-width: 0; border: 1px solid var(--border); background: var(--surface-2); color: inherit; border-radius: 9px; padding: 9px 11px; font: inherit; }
 .lista { display: flex; flex-direction: column; gap: 8px; }
 .item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
 .item.arrastando { opacity: .85; border-color: var(--accent); box-shadow: var(--shadow); }
@@ -372,6 +373,15 @@ const P = {
   check: '<path d="M20 6 9 17l-5-5"/>',
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
   file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/>',
+  site: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  book: '<path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z"/><path d="M12 6v14"/>',
+  factory: '<path d="M3 21V10l6 4v-4l6 4V5h4v16z"/><path d="M8 17h2M13 17h2"/>',
+  cart: '<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12h11L21 7H6"/>',
+  box: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+  store: '<path d="M4 9v11h16V9"/><path d="M3 9l2-5h14l2 5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M10 20v-5h4v5"/>',
+  truck: '<path d="M2 6h11v10H2zM13 9h5l3 4v3h-8z"/><circle cx="6.5" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>',
+  money: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 10v4M18 10v4"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 4 6"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
   grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
@@ -379,13 +389,14 @@ const P = {
   github: '<path d="M9 19c-4.5 1.4-4.5-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12 12 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>'
 };
 const ic = (n, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n] || P.link}</svg>`;
-const ICONES_ATALHO = ["flask", "bot", "headset", "user", "news", "chart", "tools", "link", "db", "file"];
+const ICONES_ATALHO = ["link", "site", "bot", "chart", "book", "file", "db", "tools", "headset", "news", "user", "people", "factory", "cart", "box", "store", "truck", "money", "flask"];
 
 /* ───────────── crédito (constante, igual em todos os templates) ───────────── */
 const CREDITO = { nome: "Leonardo Teixeira", linkedin: "https://br.linkedin.com/in/leonardo-teixeira-3244a6143", portfolio: "https://leorty.github.io/Portfolio-dev" };
 const LINKEDIN_OK = /^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i;
 
 /* ───────────── estado da demonstração ───────────── */
+// departamentos com que a demonstração começa; depois eles são editados na aba Departamentos (S.deps)
 const DEPS = ["Comercial", "Diretoria", "Financeiro", "Operações", "Tecnologia da Informação"];
 const PERFIS = {
   admin: { nome: "Administrador Exemplo", email: "admin@empresa.example", dep: "Tecnologia da Informação" },
@@ -401,6 +412,7 @@ function cenarioNovo() {
     { chave: "teste", titulo: "Atalho de Teste", descricao: "Exemplo de atalho. Configure o destino em Administração › Atalhos.",
       codigo: "SVC-TESTE", icone: "flask", url: "", abrir: "mesma_aba", situacao: "homologacao", modo: "todos", deps: [], fim: false, soAdmin: false }
   ];
+  S.deps = [...DEPS];
   S.liberados = {};
   S.semAcesso = {};   // atalho só de administradores -> administradores (feitos pela tela) que não usam
   S.pessoas = [
@@ -568,7 +580,14 @@ const AJUDA = {
     "Clique numa pessoa para ver o que ela enxerga e <b>por quê</b> (todos veem, pelo departamento, liberado para a pessoa).",
     "<b>Liberar só para esta pessoa</b> dá um atalho a ela mesmo que o departamento dela não tenha.",
     "<b>Bloquear</b> tira todos os acessos na hora, sem apagar o cadastro. Desbloquear devolve.",
-    "O departamento vem do diretório da empresa (ou do cadastro, quando não há diretório)."]],
+    "Na pessoa aberta dá para corrigir o <b>nome</b> e trocar o <b>departamento</b>. O departamento libera os atalhos daquele grupo.",
+    "<b>Adicionar pessoa</b> cadastra alguém antes do primeiro acesso, já no departamento certo.",
+    "Com diretório da empresa ligado, nome e departamento vêm de lá; sem diretório, valem os desta tela."]],
+  deps: ["Departamentos", "Os departamentos são os grupos da empresa. Servem para liberar um atalho para várias pessoas de uma vez.", [
+    "Crie um departamento e depois coloque as pessoas nele, na aba Pessoas.",
+    "No atalho, escolha <i>Departamentos marcados</i> e marque quais veem.",
+    "Só dá para apagar um departamento que não tenha pessoas nem atalhos ligados a ele.",
+    "O número ao lado de cada departamento é quantas pessoas ativas estão nele."]],
   pedidos: ["Pedidos de acesso", "Quem entrou com o e-mail da empresa e ainda não foi liberado espera aqui.", [
     "Escolha o <b>departamento</b> e clique em <b>Aprovar</b>: a pessoa passa a ver os atalhos daquele grupo.",
     "<b>Recusar</b> nega o pedido; a pessoa pode pedir de novo depois.",
@@ -607,8 +626,8 @@ function abasHtml(abas, atual, attr) {
     `<button role="tab" aria-selected="${k === atual}" data-a="${attr}" data-k="${k}">${t}${n ? ` <span class="cont">${n}</span>` : ""}</button>`).join("")}</div>`;
 }
 function telaAdmin() {
-  const abas = [["atalhos", "Atalhos"], ["pessoas", "Pessoas"], ["pedidos", "Pedidos de acesso", S.pedidos.length || ""], ["admins", "Administradores"], ["historico", "Histórico"], ["sistema", "Sistema"]];
-  const corpo = { atalhos: admAtalhos, pessoas: admPessoas, pedidos: admPedidos, admins: admAdmins, historico: () => admHistorico(S.historico), sistema: admSistema }[S.aba]();
+  const abas = [["atalhos", "Atalhos"], ["pessoas", "Pessoas"], ["deps", "Departamentos"], ["pedidos", "Pedidos de acesso", S.pedidos.length || ""], ["admins", "Administradores"], ["historico", "Histórico"], ["sistema", "Sistema"]];
+  const corpo = { atalhos: admAtalhos, pessoas: admPessoas, deps: admDeps, pedidos: admPedidos, admins: admAdmins, historico: () => admHistorico(S.historico), sistema: admSistema }[S.aba]();
   return `${topo({ produto: "central", titulo: "Central de Aplicações" })}
   <main class="wrap"><div class="adm-cab"><button class="voltar" data-a="inicio">${ic("back")} Página inicial</button></div>
   <h1 style="margin:0;font-size:22px">Administração da Central</h1>
@@ -645,7 +664,9 @@ function adminsDoAtalho(a) {
     <div class="nota-adm">${souFixo ? "Por padrão todo administrador usa. Quem for desmarcado deixa de ver o cartão e é barrado no servidor." : "Só um administrador fixo muda esta lista."}</div></div>`;
 }
 function admPessoas() {
-  return `<div class="linha-acoes"><span class="dica">Clique numa pessoa para ver o que ela vê e por quê, e para liberar atalhos só para ela.</span>
+  const opDep = (atual) => `<option value="">(sem departamento)</option>` + S.deps.map((d) => `<option ${d === atual ? "selected" : ""}>${esc(d)}</option>`).join("");
+  const souFixo = ehFixo(eu().email);
+  return `<div class="linha-acoes"><span class="dica">Clique numa pessoa para corrigir o nome, definir o departamento, ver o que ela vê e por quê, e liberar atalhos só para ela.</span>
     <button class="btn" data-a="add-pessoa">${ic("plus")} Adicionar pessoa</button></div>
   <div class="lista">${S.pessoas.map((p) => {
     const sit = { ativo: ["ok", "Ativa"], desabilitado: ["no", "Desabilitada"], bloqueado: ["no", "Bloqueada"], removido: ["no", "Removida"] }[p.situacao] || ["", p.situacao];
@@ -656,11 +677,47 @@ function admPessoas() {
       <span class="av">${esc(iniciais(p.nome))}</span><span class="txt"><span class="tt">${esc(p.nome)} ${admin ? `<span class="pill ok">${ehFixo(p.email) ? "admin fixo" : "admin"}</span>` : ""}</span>
       <span class="sub">${esc(p.email)} · ${esc(p.dep || "sem departamento")}</span></span><span class="pill ${sit[0]}">${sit[1]}</span></button>
       ${aberta ? `<div class="det"><div><b style="font-size:13px">Vê hoje:</b><div class="ve" style="margin-top:6px">${ve}</div></div>
+        ${!admin || souFixo ? `<div class="duas"><label class="campo"><span>Nome</span><input data-campo="nome" data-p="${esc(p.email)}" value="${esc(p.nome)}" maxlength="80"></label>
+          <label class="campo"><span>Departamento</span><select data-campo="dep" data-p="${esc(p.email)}">${opDep(p.dep)}</select></label></div>` : ""}
         ${admin ? `<div class="sub">${ehFixo(p.email) ? "Administrador fixo: vê tudo e ninguém tira pela tela." : "Administrador: vê tudo. O acesso de um administrador só muda por um administrador fixo."}</div>`
         : `<div><b style="font-size:13px">Liberar só para esta pessoa:</b><div class="chk grade" style="margin-top:6px">${S.atalhos.filter((a) => !a.soAdmin).map((a) =>
           `<label><input type="checkbox" data-a="liberar" data-k="${esc(a.chave)}" data-p="${esc(p.email)}" ${(S.liberados[a.chave] || []).includes(p.email) ? "checked" : ""}> ${esc(a.titulo)}</label>`).join("")}</div></div>
         <div><button class="btn mini ${p.situacao === "bloqueado" ? "" : "perigo"}" data-a="bloquear" data-k="${esc(p.email)}">${p.situacao === "bloqueado" ? "Desbloquear" : "Bloquear"}</button></div>`}</div>` : ""}</div>`;
   }).join("")}</div>`;
+}
+/* Departamentos: os grupos usados em "Quem vê" dos atalhos. Só se apaga o que não está em uso. */
+const usoDoDep = (d) => ({ ativas: S.pessoas.filter((x) => x.dep === d && x.situacao === "ativo").length, pessoas: S.pessoas.filter((x) => x.dep === d).length,
+  atalhos: S.atalhos.filter((a) => a.modo === "departamentos" && a.deps.includes(d)).length, ia: S.ia.acesso.modo === "departamentos" && S.ia.acesso.deps.includes(d) });
+function admDeps() {
+  return `<div class="linha-acoes"><span class="dica">Os departamentos servem para liberar um atalho para um grupo inteiro. Só dá para apagar um departamento sem pessoas e sem atalhos ligados a ele.</span></div>
+    <div class="linha-acoes"><input id="novo-dep" class="entrada-linha" placeholder="Nome do novo departamento" maxlength="60" aria-label="Nome do novo departamento">
+      <button class="btn forte" data-a="add-dep">${ic("plus")} Criar departamento</button></div>
+    <div class="lista">${S.deps.map((d) => { const u = usoDoDep(d); return `<div class="item"><span class="ico">${ic("people")}</span><div class="txt"><div class="tt">${esc(d)}</div>
+      <div class="sub">${u.ativas} pessoa(s) ativa(s) · ${u.atalhos} atalho(s)${u.ia ? " · Assistente IA" : ""}</div></div>
+      <button class="btn mini perigo" data-a="apaga-dep" data-k="${esc(d)}">Apagar</button></div>`; }).join("") || `<div class="vazio">Nenhum departamento. Crie o primeiro acima.</div>`}</div>`;
+}
+let formPessoa = false;
+function janelaPessoa() {
+  if (!formPessoa) return "";
+  return `<div class="fundo" data-a="fecha-janela-fundo"><div class="janela" role="dialog" aria-modal="true" aria-labelledby="jp-t">
+    <h2 id="jp-t">Adicionar pessoa</h2>
+    <label class="campo"><span>E-mail da empresa</span><input id="p-email" type="email" placeholder="nome@empresa.example" maxlength="120"></label>
+    <label class="campo"><span>Nome</span><input id="p-nome" maxlength="80"></label>
+    <label class="campo"><span>Departamento</span><select id="p-dep"><option value="">(sem departamento)</option>${S.deps.map((d) => `<option>${esc(d)}</option>`).join("")}</select></label>
+    <div class="erro" id="p-erro" role="alert"></div>
+    <div class="fim"><button class="btn" data-a="fecha-janela">Cancelar</button><button class="btn forte" data-a="salva-pessoa">Adicionar</button></div>
+  </div></div>`;
+}
+function salvarPessoa() {
+  const email = $("#p-email").value.trim().toLowerCase(), dep = $("#p-dep").value;
+  const erro = (m) => { $("#p-erro").textContent = m; };
+  if (!/^[^@ ]+@[^@ ]+[.][^@ ]+$/.test(email)) return erro("Informe um e-mail válido.");
+  if (pessoaDe(email) || ehFixo(email)) return erro("Essa pessoa já está cadastrada.");
+  const nome = $("#p-nome").value.trim() || email.split("@")[0].split(/[._-]+/).filter(Boolean).map((x) => x[0].toUpperCase() + x.slice(1)).join(" ");
+  S.pessoas.push({ nome, email, dep, situacao: "ativo" });
+  if (S.pedidos.some((x) => x.email === email)) { S.pedidos = S.pedidos.filter((x) => x.email !== email); PERFIS.novo.dep = dep; }
+  registrar(email, `cadastrada por um administrador · ${dep ? "departamento " + dep : "sem departamento"}`);
+  formPessoa = false; S.pessoaAberta = email; toast("Pessoa adicionada."); render();
 }
 function admPedidos() {
   if (!S.pedidos.length) return `<div class="vazio">Nenhum pedido de acesso aguardando.</div>`;
@@ -668,7 +725,7 @@ function admPedidos() {
   <div class="lista">${S.pedidos.map((p) => `<div class="item"><span class="av">${esc(iniciais(p.nome))}</span>
     <div class="txt"><div class="tt">${esc(p.nome)}</div><div class="sub">${esc(p.email)} · pediu ${esc(p.quando)}</div></div>
     <label class="sr" for="dep-${esc(p.email)}">Departamento</label>
-    <select id="dep-${esc(p.email)}" class="btn mini" data-dep-de="${esc(p.email)}">${DEPS.map((d) => `<option>${esc(d)}</option>`).join("")}</select>
+    <select id="dep-${esc(p.email)}" class="btn mini" data-dep-de="${esc(p.email)}">${S.deps.map((d) => `<option>${esc(d)}</option>`).join("")}</select>
     <button class="btn mini forte" data-a="aprovar" data-k="${esc(p.email)}">${ic("check")} Aprovar</button>
     <button class="btn mini perigo" data-a="recusar" data-k="${esc(p.email)}">Recusar</button></div>`).join("")}</div>`;
 }
@@ -715,7 +772,7 @@ function janelaAtalho() {
       <label class="campo"><span>Situação</span><select id="f-sit">${Object.entries(SIT).map(([k, [, t]]) => `<option value="${k}" ${f.situacao === k ? "selected" : ""}>${t}</option>`).join("")}</select></label></div>
     <div class="campo"><span>Ícone</span><div class="icones">${ICONES_ATALHO.map((n) => `<button type="button" data-a="f-icone" data-k="${n}" aria-pressed="${f.icone === n}" aria-label="${n}">${ic(n)}</button>`).join("")}</div></div>
     <label class="campo"><span>Quem vê</span><select id="f-modo"><option value="todos" ${f.modo === "todos" ? "selected" : ""}>Todos</option><option value="departamentos" ${f.modo === "departamentos" ? "selected" : ""}>Departamentos marcados</option><option value="ninguem" ${f.modo === "ninguem" ? "selected" : ""}>Ninguém (só liberados pessoa a pessoa)</option></select></label>
-    <div class="campo" id="f-deps-box" ${f.modo === "departamentos" ? "" : "hidden"}><span>Departamentos que veem este atalho</span><div class="chk grade">${DEPS.map((d) => `<label><input type="checkbox" class="f-dep" value="${esc(d)}" ${f.deps.includes(d) ? "checked" : ""}><span>${esc(d)}</span><small title="pessoas ativas no departamento">${S.pessoas.filter((x) => x.dep === d && x.situacao === "ativo").length}</small></label>`).join("")}</div></div>
+    <div class="campo" id="f-deps-box" ${f.modo === "departamentos" ? "" : "hidden"}><span>Departamentos que veem este atalho</span><div class="chk grade">${S.deps.map((d) => `<label><input type="checkbox" class="f-dep" value="${esc(d)}" ${f.deps.includes(d) ? "checked" : ""}><span>${esc(d)}</span><small title="pessoas ativas no departamento">${S.pessoas.filter((x) => x.dep === d && x.situacao === "ativo").length}</small></label>`).join("")}</div></div>
     <label class="chk" style="margin-bottom:6px"><label><input type="checkbox" id="f-fim" ${f.fim ? "checked" : ""}> Sempre por último (não se arrasta; atalhos novos entram antes)</label></label>
     <div class="erro" id="f-erro" role="alert"></div>
     <div class="fim"><button class="btn" data-a="fecha-janela">Cancelar</button><button class="btn forte" data-a="salva-atalho">Salvar</button></div>
@@ -887,7 +944,7 @@ function iaPessoas() {
   return `<div class="bloco" style="margin-bottom:12px"><h3>${ic("db")} Módulo Consultas: quem usa</h3>
     <div class="linha-acoes" style="margin:8px 0"><select class="btn mini" id="ia-modo"><option value="todos" ${a.modo === "todos" ? "selected" : ""}>Todos</option><option value="departamentos" ${a.modo === "departamentos" ? "selected" : ""}>Departamentos marcados</option><option value="ninguem" ${a.modo === "ninguem" ? "selected" : ""}>Ninguém (só liberados)</option></select>
     <button class="btn mini forte" data-a="ia-salva-modo">Salvar regra</button></div>
-    <div class="chk" id="ia-deps" ${a.modo === "departamentos" ? "" : "hidden"}>${DEPS.map((d) => `<label><input type="checkbox" class="ia-dep" value="${esc(d)}" ${a.deps.includes(d) ? "checked" : ""}> ${esc(d)}</label>`).join("")}</div></div>
+    <div class="chk" id="ia-deps" ${a.modo === "departamentos" ? "" : "hidden"}>${S.deps.map((d) => `<label><input type="checkbox" class="ia-dep" value="${esc(d)}" ${a.deps.includes(d) ? "checked" : ""}> ${esc(d)}</label>`).join("")}</div></div>
   <div class="lista">${S.pessoas.filter((p) => p.situacao === "ativo").map((p) => `<div class="item"><span class="av">${esc(iniciais(p.nome))}</span>
     <div class="txt"><div class="tt">${esc(p.nome)}</div><div class="sub">${esc(p.dep)} · ${temIa(p.email) ? (ehAdmin(p.email) ? "administrador: usa tudo" : a.pessoas.includes(p.email) ? "liberado para a pessoa" : "pela regra") : "sem acesso"}</div></div>
     ${ehAdmin(p.email) ? `<span class="pill ok">admin</span>` : `<label class="chk"><label><input type="checkbox" data-a="ia-libera" data-k="${esc(p.email)}" ${a.pessoas.includes(p.email) ? "checked" : ""}> liberar só para ela</label></label>`}
@@ -926,14 +983,14 @@ function render() {
   else if (!S.logado || situacaoDe(eu().email) === "pendente") html = telaEntrada();
   else if (S.tela === "admin" && ehAdmin(eu().email)) html = telaAdmin();
   else html = telaInicio();
-  app.innerHTML = html + janelaAtalho() + ajudaJanela();
+  app.innerHTML = html + janelaAtalho() + janelaPessoa() + ajudaJanela();
   document.querySelectorAll('[data-demo="produto"]').forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === S.produto)));
   document.title = S.produto === "ia" ? "Assistente IA · demonstração" : "Central de Aplicações · demonstração";
   ligarOrdem();
 }
 
 function trocarCenario(v) {
-  S.cenario = v; S.ordemPendente = null; S.pessoaAberta = null; formAtalho = null;
+  S.cenario = v; S.ordemPendente = null; S.pessoaAberta = null; formAtalho = null; formPessoa = false;
   if (v === "config") cenarioConfig(); else cenarioNovo();
   render();
 }
@@ -970,8 +1027,8 @@ document.addEventListener("click", (e) => {
     case "apagar": { const at = S.atalhos.find((x) => x.chave === k); if (!confirm(`Apagar o atalho "${at.titulo}"? O histórico guarda o registro.`)) return;
       S.atalhos = S.atalhos.filter((x) => x !== at); delete S.liberados[k]; S.ordemPendente = null; registrar(at.titulo, "apagado"); toast("Atalho apagado."); break; }
     case "f-icone": formAtalho.icone = k; document.querySelectorAll('[data-a="f-icone"]').forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.k === k))); return;
-    case "fecha-janela": formAtalho = null; break;
-    case "fecha-janela-fundo": if (e.target !== el) return; formAtalho = null; break;
+    case "fecha-janela": formAtalho = null; formPessoa = false; break;
+    case "fecha-janela-fundo": if (e.target !== el) return; formAtalho = null; formPessoa = false; break;
     case "salva-atalho": salvarAtalho(); return;
     case "ordem-desfazer": S.ordemPendente = null; break;
     case "ordem-salvar": {
@@ -992,7 +1049,16 @@ document.addEventListener("click", (e) => {
       else { fora.push(pe); registrar(pe, `tirou ${titulo} (atalho só de administradores)`); }
       break; }
     case "bloquear": { const pe = pessoaDe(k); pe.situacao = pe.situacao === "bloqueado" ? "ativo" : "bloqueado"; registrar(k, pe.situacao === "bloqueado" ? "bloqueada por um administrador: perdeu os acessos" : "desbloqueada"); break; }
-    case "add-pessoa": toast("Nos modos lista de e-mails e domínio, o administrador cadastra e-mail, nome e departamento. Com diretório, as pessoas vêm do AD."); return;
+    case "add-pessoa": formPessoa = true; render(); $("#p-email")?.focus(); return;
+    case "salva-pessoa": salvarPessoa(); return;
+    case "add-dep": { const v = $("#novo-dep").value.trim().split(/ +/).join(" ");
+      if (!v) { toast("Escreva o nome do departamento."); $("#novo-dep").focus(); return; }
+      if (S.deps.some((d) => d.localeCompare(v, "pt-BR", { sensitivity: "base" }) === 0)) { toast("Já existe um departamento com esse nome."); return; }
+      S.deps.push(v); S.deps.sort((x, y) => x.localeCompare(y, "pt-BR")); registrar("Departamentos", `criou ${v}`); toast("Departamento criado."); break; }
+    case "apaga-dep": { const u = usoDoDep(k);
+      if (u.pessoas || u.atalhos || u.ia) { toast(`Não dá para apagar: ${k} ainda tem ${[u.pessoas ? u.pessoas + " pessoa(s)" : "", u.atalhos ? u.atalhos + " atalho(s)" : "", u.ia ? "o Assistente IA" : ""].filter(Boolean).join(" e ")} ligados a ele.`); return; }
+      if (!confirm(`Apagar o departamento "${k}"?`)) return;
+      S.deps = S.deps.filter((d) => d !== k); registrar("Departamentos", `apagou ${k}`); toast("Departamento apagado."); break; }
     case "aprovar": { const pd = S.pedidos.find((x) => x.email === k); const dep = $(`[data-dep-de="${CSS.escape(k)}"]`).value;
       S.pedidos = S.pedidos.filter((x) => x !== pd); S.pessoas.push({ nome: pd.nome, email: pd.email, dep, situacao: "ativo" }); PERFIS.novo.dep = dep;
       registrar(k, `pedido de acesso aprovado · departamento ${dep}`); toast(`${pd.nome} aprovado(a). Troque o perfil para "Pessoa nova" para ver a Central dela.`); break; }
@@ -1033,13 +1099,26 @@ document.addEventListener("click", (e) => {
 document.addEventListener("change", (e) => {
   if (e.target.id === "f-modo") $("#f-deps-box").hidden = e.target.value !== "departamentos";
   if (e.target.id === "ia-modo") $("#ia-deps").hidden = e.target.value !== "departamentos";
+  // nome e departamento da pessoa, editados na aba Pessoas
+  const campo = e.target.dataset.campo;
+  if (campo) {
+    const pe = pessoaDe(e.target.dataset.p); if (!pe) return;
+    const nosPerfis = (f) => Object.values(PERFIS).forEach((x) => { if (x.email === pe.email) f(x); });
+    if (campo === "nome") { const v = e.target.value.trim();
+      if (!v) toast("O nome não pode ficar vazio.");
+      else if (v !== pe.nome) { registrar(pe.email, `nome: ${v} (antes: ${pe.nome})`); pe.nome = v; nosPerfis((x) => { x.nome = v; }); toast("Salvo."); } }
+    if (campo === "dep" && e.target.value !== pe.dep) { registrar(pe.email, `departamento: ${e.target.value || "nenhum"} (antes: ${pe.dep || "nenhum"})`);
+      pe.dep = e.target.value; nosPerfis((x) => { x.dep = pe.dep; }); toast("Salvo."); }
+    render();
+  }
 });
 document.addEventListener("submit", (e) => {
   if (e.target.dataset.f !== "perguntar") return;
   e.preventDefault(); const t = $("#pergunta"); const v = t.value; t.value = ""; perguntar(v);
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") { if (S.ajuda) fecharAjuda(); else if (formAtalho) { formAtalho = null; render(); } else if (S.credito) { S.credito = null; render(); $(".credito-btn")?.focus(); } }
+  if (e.target.id === "novo-dep" && e.key === "Enter") { e.preventDefault(); $('[data-a="add-dep"]').click(); return; }
+  if (e.key === "Escape") { if (S.ajuda) fecharAjuda(); else if (formAtalho || formPessoa) { formAtalho = null; formPessoa = false; render(); } else if (S.credito) { S.credito = null; render(); $(".credito-btn")?.focus(); } }
   if (e.target.id === "pergunta" && e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.target.form.requestSubmit(); }
 });
 $("#d-perfil").addEventListener("change", (e) => { S.perfil = e.target.value;
