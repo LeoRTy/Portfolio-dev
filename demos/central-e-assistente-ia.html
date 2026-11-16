@@ -264,6 +264,27 @@ body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: col
 .so-adm { margin: -4px 0 0 46px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 0 0 12px 12px; padding: 10px 14px; font-size: 13.5px; }
 .so-adm b { display: block; margin-bottom: 6px; font-size: 13px; }
 .so-adm .nota-adm { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
+/* o que está marcado como escondido fica escondido de verdade (o bloco de departamentos aparecia com "Todos" escolhido) */
+[hidden] { display: none !important; }
+/* caixinhas em grade alinhada, com a contagem ao lado; responsivo */
+.campo input[type=checkbox], .campo input[type=radio] { width: auto; }
+.chk input[type=checkbox] { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.chk label { cursor: pointer; }
+.chk.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px 16px; }
+.chk.grade label { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; }
+.chk.grade label > span { min-width: 0; overflow-wrap: anywhere; }
+.chk.grade small { color: var(--faint); font-size: 12px; font-variant-numeric: tabular-nums; }
+#f-deps-box, #ia-deps { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+@media (max-width: 480px) { .chk.grade { grid-template-columns: 1fr 1fr; } }
+/* ajuda de cada aba (o "i") */
+.ajuda-linha { margin: -4px 0 12px; }
+.i-bt { display: inline-flex; align-items: center; gap: 7px; border: 0; background: none; padding: 4px 6px 4px 0; color: var(--muted); font-size: 13px; }
+.i-bt svg { width: 17px; height: 17px; color: var(--accent); }
+.i-bt:hover, .i-bt[aria-expanded="true"] { color: var(--accent); }
+.ajuda-caixa { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 12px; padding: 14px 18px; margin: 0 0 16px; font-size: 14px; line-height: 1.55; animation: entra .2s ease both; }
+.ajuda-caixa p { margin: 0 0 8px; font-weight: 600; }
+.ajuda-caixa ul { margin: 0; padding-left: 18px; }
+.ajuda-caixa li { margin: 4px 0; }
 </style>
 </head>
 <body>
@@ -513,6 +534,41 @@ function telaInicio() {
   ${lista.length ? `<div class="grade">${cards}</div>` : `<div class="vazio">Ainda não há sistemas liberados para você. Fale com a área responsável.</div>`}
   </main>${rodape("central")}`;
 }
+/* ajuda de cada aba da Administração (o "i") */
+const AJUDA = {
+  atalhos: ["Atalhos", "Os atalhos são os cartões da página inicial: cada um abre um sistema.", [
+    "<b>Novo atalho</b> cria um cartão. Dê um título, uma descrição curta e o endereço do sistema.",
+    "<b>Quem vê</b> decide o público: <i>Todos</i>, só os <i>Departamentos marcados</i>, ou <i>Ninguém</i> (aí você libera pessoa a pessoa na aba Pessoas).",
+    "<b>Situação</b> é um aviso para quem usa: Operacional, Em homologação ou Em manutenção (este não abre).",
+    "<b>Ordem:</b> arraste pela alça e clique em Salvar ordem. Vale para a página inicial de todos.",
+    "<b>Sempre por último</b> prende o cartão no fim da lista.",
+    "Em um atalho <b>só de administradores</b>, um administrador fixo escolhe quais administradores usam."]],
+  pessoas: ["Pessoas", "Aqui fica todo mundo que pode entrar na Central.", [
+    "Clique numa pessoa para ver o que ela enxerga e <b>por quê</b> (todos veem, pelo departamento, liberado para a pessoa).",
+    "<b>Liberar só para esta pessoa</b> dá um atalho a ela mesmo que o departamento dela não tenha.",
+    "<b>Bloquear</b> tira todos os acessos na hora, sem apagar o cadastro. Desbloquear devolve.",
+    "O departamento vem do diretório da empresa (ou do cadastro, quando não há diretório)."]],
+  pedidos: ["Pedidos de acesso", "Quem entrou com o e-mail da empresa e ainda não foi liberado espera aqui.", [
+    "Escolha o <b>departamento</b> e clique em <b>Aprovar</b>: a pessoa passa a ver os atalhos daquele grupo.",
+    "<b>Recusar</b> nega o pedido; a pessoa pode pedir de novo depois.",
+    "O número ao lado do nome da aba mostra quantos pedidos esperam."]],
+  admins: ["Administradores", "Administrador é quem abre esta tela e decide os acessos.", [
+    "<b>Fixos</b> vêm da configuração do servidor. Fazem tudo e ninguém consegue tirar pela tela.",
+    "<b>Feitos pela tela</b> cuidam de atalhos, pessoas e pedidos, mas não mexem no próprio acesso, no de outro administrador, nem criam administradores.",
+    "Só um administrador fixo torna alguém administrador ou tira."]],
+  historico: ["Histórico", "Tudo o que muda nos acessos fica registrado aqui.", [
+    "Cada linha mostra quando foi, o que mudou (com o valor de antes) e quem fez.",
+    "Nada é apagado do histórico, nem quando um atalho é excluído."]],
+  sistema: ["Sistema", "Informações de como a Central está funcionando. Só leitura.", [
+    "<b>Acesso e login:</b> como as pessoas entram e quem é aceito.",
+    "<b>Diretório:</b> de onde vêm as pessoas e os departamentos, e quando foi a última conferência.",
+    "<b>Backup</b> e <b>Versão</b> no ar."]]
+};
+function ajudaHtml() {
+  const [titulo, resumo, itens] = AJUDA[S.aba] || AJUDA.atalhos;
+  return `<div class="ajuda-linha"><button class="i-bt" data-a="ajuda" aria-expanded="${Boolean(S.ajuda)}" title="Para que serve esta aba">${ic("info")}<span>Para que serve a aba ${esc(titulo)}</span></button></div>
+    ${S.ajuda ? `<div class="ajuda-caixa"><p>${resumo}</p><ul>${itens.map((t) => `<li>${t}</li>`).join("")}</ul></div>` : ""}`;
+}
 function abasHtml(abas, atual, attr) {
   return `<div class="abas" role="tablist">${abas.map(([k, t, n]) =>
     `<button role="tab" aria-selected="${k === atual}" data-a="${attr}" data-k="${k}">${t}${n ? ` <span class="cont">${n}</span>` : ""}</button>`).join("")}</div>`;
@@ -523,7 +579,7 @@ function telaAdmin() {
   return `${topo({ produto: "central", titulo: "Central de Aplicações" })}
   <main class="wrap"><div class="adm-cab"><button class="voltar" data-a="inicio">${ic("back")} Página inicial</button></div>
   <h1 style="margin:0;font-size:22px">Administração da Central</h1>
-  ${abasHtml(abas, S.aba, "aba")}<section class="painel-adm">${corpo}</section></main>${rodape("central")}`;
+  ${abasHtml(abas, S.aba, "aba")}<section class="painel-adm">${ajudaHtml()}${corpo}</section></main>${rodape("central")}`;
 }
 function admAtalhos() {
   const lista = S.ordemPendente ? S.ordemPendente.map((k) => S.atalhos.find((a) => a.chave === k)).concat(S.atalhos.filter((a) => a.fim)) : ordem();
@@ -568,7 +624,7 @@ function admPessoas() {
       <span class="sub">${esc(p.email)} · ${esc(p.dep || "sem departamento")}</span></span><span class="pill ${sit[0]}">${sit[1]}</span></button>
       ${aberta ? `<div class="det"><div><b style="font-size:13px">Vê hoje:</b><div class="ve" style="margin-top:6px">${ve}</div></div>
         ${admin ? `<div class="sub">${ehFixo(p.email) ? "Administrador fixo: vê tudo e ninguém tira pela tela." : "Administrador: vê tudo. O acesso de um administrador só muda por um administrador fixo."}</div>`
-        : `<div><b style="font-size:13px">Liberar só para esta pessoa:</b><div class="chk" style="margin-top:6px">${S.atalhos.filter((a) => !a.soAdmin).map((a) =>
+        : `<div><b style="font-size:13px">Liberar só para esta pessoa:</b><div class="chk grade" style="margin-top:6px">${S.atalhos.filter((a) => !a.soAdmin).map((a) =>
           `<label><input type="checkbox" data-a="liberar" data-k="${esc(a.chave)}" data-p="${esc(p.email)}" ${(S.liberados[a.chave] || []).includes(p.email) ? "checked" : ""}> ${esc(a.titulo)}</label>`).join("")}</div></div>
         <div><button class="btn mini ${p.situacao === "bloqueado" ? "" : "perigo"}" data-a="bloquear" data-k="${esc(p.email)}">${p.situacao === "bloqueado" ? "Desbloquear" : "Bloquear"}</button></div>`}</div>` : ""}</div>`;
   }).join("")}</div>`;
@@ -626,7 +682,7 @@ function janelaAtalho() {
       <label class="campo"><span>Situação</span><select id="f-sit">${Object.entries(SIT).map(([k, [, t]]) => `<option value="${k}" ${f.situacao === k ? "selected" : ""}>${t}</option>`).join("")}</select></label></div>
     <div class="campo"><span>Ícone</span><div class="icones">${ICONES_ATALHO.map((n) => `<button type="button" data-a="f-icone" data-k="${n}" aria-pressed="${f.icone === n}" aria-label="${n}">${ic(n)}</button>`).join("")}</div></div>
     <label class="campo"><span>Quem vê</span><select id="f-modo"><option value="todos" ${f.modo === "todos" ? "selected" : ""}>Todos</option><option value="departamentos" ${f.modo === "departamentos" ? "selected" : ""}>Departamentos marcados</option><option value="ninguem" ${f.modo === "ninguem" ? "selected" : ""}>Ninguém (só liberados pessoa a pessoa)</option></select></label>
-    <div class="campo" id="f-deps-box" ${f.modo === "departamentos" ? "" : "hidden"}><span>Departamentos</span><div class="chk">${DEPS.map((d) => `<label><input type="checkbox" class="f-dep" value="${esc(d)}" ${f.deps.includes(d) ? "checked" : ""}> ${esc(d)}</label>`).join("")}</div></div>
+    <div class="campo" id="f-deps-box" ${f.modo === "departamentos" ? "" : "hidden"}><span>Departamentos que veem este atalho</span><div class="chk grade">${DEPS.map((d) => `<label><input type="checkbox" class="f-dep" value="${esc(d)}" ${f.deps.includes(d) ? "checked" : ""}><span>${esc(d)}</span><small title="pessoas ativas no departamento">${S.pessoas.filter((x) => x.dep === d && x.situacao === "ativo").length}</small></label>`).join("")}</div></div>
     <label class="chk" style="margin-bottom:6px"><label><input type="checkbox" id="f-fim" ${f.fim ? "checked" : ""}> Sempre por último (não se arrasta; atalhos novos entram antes)</label></label>
     <div class="erro" id="f-erro" role="alert"></div>
     <div class="fim"><button class="btn" data-a="fecha-janela">Cancelar</button><button class="btn forte" data-a="salva-atalho">Salvar</button></div>
@@ -866,6 +922,7 @@ document.addEventListener("click", (e) => {
     case "admin": if (S.ordemPendente === null) S.aba = S.aba || "atalhos"; S.tela = "admin"; break;
     case "inicio": if (S.ordemPendente && !confirm("A ordem não foi salva. Sair mesmo assim?")) return; S.ordemPendente = null; S.tela = "inicio"; break;
     case "aba": S.aba = k; break;
+    case "ajuda": S.ajuda = !S.ajuda; break;
     case "abrir": {
       const at = S.atalhos.find((x) => x.chave === k);
       if (at.situacao === "manutencao") { toast("Este sistema está em manutenção."); return; }
