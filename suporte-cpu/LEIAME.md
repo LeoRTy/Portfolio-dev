@@ -1,35 +1,28 @@
-# Suporte para gabinete torre com ajuste por clique
+# Suporte de CPU estilo "offset" (pernas em Z frisadas)
 
 Feito para o **Dell Pro Max Tower T2 (FCT2250)**, com base de 187,7 x 438 mm.
-Visual: face externa inclinada com frisos verticais, cantos bem arredondados e quina de cima suave
-(ver `render_*.png`). É uma moldura de 40 mm de altura com vão central aberto para a fonte puxar ar por baixo.
-Montagem sem parafuso e sem cola: as peças se ligam por chaves "gravata-borboleta".
+Duas pernas laterais com perfil em Z (mesmo sentido do riser de monitor de referência), frisos,
+cantos arredondados e **borda** em volta: lateral, frente e trás. Veja `render_*.png`.
 
-## Ajuste (batentes com clique)
-Em cima da moldura há 12 trilhos. Em cada um entra um **batente** que desliza para dentro e para fora
-e trava com um clique a cada 2 mm (8 posições, 16 mm de curso). Cada batente se ajusta sozinho,
-então dá para centralizar e esquadrejar o gabinete encostando todos os batentes nele.
-
-Faixa aceita: largura 171,7 a 203,7 mm e profundidade 422 a 454 mm.
-Moldura: 247,7 x 498 mm na base (227,7 x 478 mm no topo).
-
-## Como montar
-1. Monte a moldura: 4 cantos + 4 vigas, encaixando as chaves de cima para baixo nas juntas.
-2. Encaixe os batentes nos trilhos pela face externa da moldura, todos puxados para fora.
-3. Coloque o gabinete e empurre cada batente até encostar no gabinete (clique, clique...).
+- Altura: 55 mm até onde o gabinete apoia + borda de 14 mm.
+- Medidas totais: 241 x 455 mm. Vão aberto de 54 mm no meio para a fonte puxar ar.
+- **Ajuste de largura:** as duas pernas são soltas uma da outra. Coloque o gabinete e encoste
+  as pernas nele: a borda lateral de cada perna segura o gabinete na medida exata.
+- Frente e trás: borda com 1 mm de folga para os 438 mm do Dell.
 
 ## Imprimir
+Cada perna tem 3 pedaços, unidos por chaves "gravata-borboleta" encaixadas de cima para baixo.
+
 | Arquivo | Qtd |
 |---|---|
-| canto.stl | 4 |
-| viga.stl | 4 |
-| chave.stl | 8 |
-| batente.stl | 12 (mínimo recomendado: 8, dois por lado) |
+| perna_esq_frente.stl, perna_esq_meio.stl, perna_esq_tras.stl | 1 de cada |
+| perna_dir_frente.stl, perna_dir_meio.stl, perna_dir_tras.stl | 1 de cada |
+| chave_prateleira.stl | 4 |
+| chave_pe.stl | 4 |
 
-Todas as peças cabem numa mesa 220 x 220 e não precisam de suporte; imprima na posição do arquivo.
-Moldura/chaves: PETG ou PLA (branco fosco fica igual ao render), 4 paredes, 20–25% gyroid. **Batentes: PETG de preferência**
-(as hastes-mola do clique duram mais), 100% de preenchimento ou 5+ paredes, camada 0,16–0,2 mm.
+Cada pedaço tem 112 x 69 x 152 mm, cabe numa mesa 220 x 220 e já vem em pé, com o perfil na mesa,
+sem suporte. Sugestão: PLA/PETG branco fosco, 4 paredes, 15–20% gyroid, camada 0,2 mm.
 
-Se o clique ficar duro ou solto demais, ajuste `NOTCH`/`BUMP`/`SLIDE_CLR` em `gerar_suporte.py`
-e rode `pip install manifold3d trimesh numpy && python3 gerar_suporte.py`.
-Para outro gabinete, mude `CASE_W` e `CASE_D`.
+Para mudar medidas, edite `gerar_suporte_z.py` e rode
+`pip install manifold3d trimesh numpy && python3 gerar_suporte_z.py`.
+(As versões anteriores, moldura com batentes de clique, estão no histórico do git.)
