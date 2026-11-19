@@ -20,6 +20,7 @@ FOOT_T = 10        # espessura do pe
 LIP_T, LIP_H = 8, 14   # borda que segura o gabinete
 R_OUT, R_IN = 3, 10    # arredondamentos
 GROOVE_W, GROOVE_D, GROOVE_P = 2.2, 1.0, 5.0   # frisos
+ESPELHADO = True   # True: pes abrindo para os dois lados; False: as duas pernas no mesmo sentido
 N_SEG  = 3         # pedacos por perna (cabe em mesa 220x220)
 KEY_NECK, KEY_WIDE, KEY_HALF, KEY_CLR = 12, 20, 12, 0.2
 # --------------------------------------------------
@@ -109,41 +110,53 @@ def x_offset_right():
     return LIP_T + CASE_W - (BAR - LIP_T)
 
 
+def leg_segment(side, i):
+    """Pedaco da perna na posicao de montagem (perna esquerda com x a partir de 0)."""
+    if ESPELHADO and side == "esq":
+        return segment("dir", i).mirror([1, 0, 0]).translate([BAR, 0, 0])
+    return segment(side, i)
+
+
+def leg_keys(side):
+    kb, kf = key(BAR_T), key(FOOT_T)
+    ks = []
+    for i in range(1, N_SEG):
+        y = i * SEG_L
+        ks += [kb.translate([BAR / 2, y, H - BAR_T + 0.2]),
+               kf.translate([OFF + FOOT * 0.6, y, 0.2])]
+    if ESPELHADO and side == "esq":
+        ks = [k.mirror([1, 0, 0]).translate([BAR, 0, 0]) for k in ks]
+    return ks
+
+
 if __name__ == "__main__":
     names = ["frente", "meio", "tras"] if N_SEG == 3 else [str(i) for i in range(N_SEG)]
-    parts = []
+    xr = x_offset_right()
+    frame, keys = [], []
     for side in ("esq", "dir"):
+        dx = 0 if side == "esq" else xr
         for i in range(N_SEG):
-            seg = segment(side, i)
+            seg = leg_segment(side, i)
             assert seg.status().name == "NoError"
-            parts.append((side, i, seg))
-            # imprimir em pe: perfil na mesa
+            frame.append(seg.translate([dx, 0, 0]))
+            # imprimir em pe: perfil na mesa (pontas com a borda para baixo)
             p = seg.translate([0, -i * SEG_L, 0]).rotate([90, 0, 0])
+            if i == N_SEG - 1:
+                p = p.rotate([180, 0, 0])
             bb = p.bounding_box()
             p = p.translate([-bb[0], -bb[1], -bb[2]])
-            if i == N_SEG - 1:      # ponta de tras: borda para baixo na mesa
-                p = p.rotate([180, 0, 0])
-                bb = p.bounding_box(); p = p.translate([-bb[0], -bb[1], -bb[2]])
             t = to_tm(p)
             assert t.is_watertight
             fn = f"perna_{side}_{names[i]}.stl"
             t.export(fn)
             e = t.bounds[1] - t.bounds[0]
             print(f"{fn}: {e[0]:.0f} x {e[1]:.0f} x {e[2]:.0f} mm, {t.volume/1000:.0f} cm3")
-    kb = key(BAR_T); kf = key(FOOT_T)
-    to_tm(kb).export("chave_prateleira.stl"); to_tm(kf).export("chave_pe.stl")
-    # montagem
-    xr = x_offset_right()
-    asm = []
-    for side, i, seg in parts:
-        asm.append(seg if side == "esq" else seg.translate([xr, 0, 0]))
-    for dx in (0, xr):
-        for i in range(1, N_SEG):
-            y = i * SEG_L
-            asm.append(kb.translate([dx + BAR / 2, y, H - BAR_T + 0.2]))
-            asm.append(kf.translate([dx + OFF + FOOT * 0.6, y, 0.2]))
-    inter = sum((a ^ b).volume() for a in asm[2 * N_SEG:] for b in asm[:2 * N_SEG])
+        keys += [k.translate([dx, 0, 0]) for k in leg_keys(side)]
+    to_tm(key(BAR_T)).export("chave_prateleira.stl")
+    to_tm(key(FOOT_T)).export("chave_pe.stl")
+    inter = sum((a ^ b).volume() for a in keys for b in frame)
     print(f"Interferencia chaves: {inter:.3f} mm3")
-    trimesh.util.concatenate([to_tm(m) for m in asm]).export("montagem_preview.stl")
-    print(f"Largura total {xr + OFF + FOOT:.0f} mm, profundidade {D_TOT:.0f} mm, "
-          f"altura {H} mm (+{LIP_H} borda). Vao livre no meio: {xr - BAR:.0f} mm")
+    trimesh.util.concatenate([to_tm(m) for m in frame + keys]).export("montagem_preview.stl")
+    bb = trimesh.load("montagem_preview.stl").bounds
+    print(f"Medidas totais {bb[1][0]-bb[0][0]:.0f} x {bb[1][1]-bb[0][1]:.0f} mm, altura {H} mm "
+          f"(+{LIP_H} borda). Vao livre no meio: {xr - BAR:.0f} mm. x0={bb[0][0]:.1f}")
