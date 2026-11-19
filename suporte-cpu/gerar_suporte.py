@@ -6,7 +6,7 @@ Requer: pip install manifold3d trimesh numpy
 import math
 import numpy as np
 import trimesh
-from manifold3d import Manifold, CrossSection
+from manifold3d import Manifold, CrossSection, JoinType, OpType
 
 # ---------------- PARAMETROS (mm) ----------------
 CASE_W = 187.7    # largura do gabinete
@@ -33,6 +33,12 @@ BUMP    = 0.7     # altura do dente da haste-mola
 CAP_L   = 12      # espessura do batente (direcao do ajuste)
 CAP_W   = 30      # largura do batente
 CAP_H   = 16      # altura do batente acima do apoio
+# Estilo visual
+SLANT   = 10      # quanto a base se abre para fora (face externa inclinada)
+R_TOP   = 7       # arredondamento da quina superior externa
+R_IN    = 3       # arredondamento da quina superior interna
+FLUTE_R = 1.6     # raio dos frisos (canaletas) da face externa
+FLUTE_P = 5.0     # passo entre frisos
 NOMINAL = 20      # distancia nominal da borda do gabinete ate a face externa da moldura
 # --------------------------------------------------
 
@@ -107,18 +113,83 @@ def pockets_along(x0, x1, grooves):
     return union(cuts)
 
 
+# ---------- perfil estilizado ----------
+def _arc(c, r, a0, a1, n=12):
+    return [(c[0] + r * math.cos(a0 + (a1 - a0) * i / n), c[1] + r * math.sin(a0 + (a1 - a0) * i / n))
+            for i in range(n + 1)]
+
+
+def profile_cs():
+    """Secao da viga no plano (y, z): face externa inclinada, quinas de cima arredondadas.
+    y=0 e a borda externa do topo; a base avanca ate y=-SLANT."""
+    # quina externa (0,H): entre o topo (+y) e a face inclinada (para (-SLANT,0))
+    u1 = np.array([1.0, 0.0])
+    u2 = np.array([-SLANT, -H], float); u2 /= np.linalg.norm(u2)
+    phi = math.acos(float(u1 @ u2))
+    t = R_TOP / math.tan(phi / 2)
+    bis = (u1 + u2) / np.linalg.norm(u1 + u2)
+    c = np.array([0.0, H]) + bis * (R_TOP / math.sin(phi / 2))
+    p1 = np.array([0.0, H]) + u1 * t          # tangente no topo
+    p2 = np.array([0.0, H]) + u2 * t          # tangente na face inclinada
+    a1 = math.atan2(*(p1 - c)[::-1]); a2 = math.atan2(*(p2 - c)[::-1])
+    if a2 < a1:
+        a2 += 2 * math.pi
+    outer = _arc(c, R_TOP, a1, a2)
+    inner = _arc((BW - R_IN, H - R_IN), R_IN, 0, math.pi / 2, 6)
+    pts = [(-SLANT, 0.0), (BW, 0.0)] + inner + outer
+    return CrossSection([pts])
+
+
+def extrude_x(cs, x0, x1):
+    """Extruda o perfil (y,z) ao longo de X entre x0 e x1."""
+    m = Manifold.extrude(cs, x1 - x0)   # (u, v, w) = (y, z, x)
+    return m.transform([[0, 0, 1, x0], [1, 0, 0, 0], [0, 1, 0, 0]])
+
+
+def flute_cutter():
+    """Um cilindro de friso deitado sobre a face inclinada, no plano x=0."""
+    L = math.hypot(SLANT, H) + 20
+    c = Manifold.cylinder(L, FLUTE_R, FLUTE_R, 24, True)       # ao longo de Z
+    ang = math.degrees(math.atan2(SLANT, H))                   # inclina p/ seguir a face
+    return c.rotate([-ang, 0, 0]).translate([0, -SLANT / 2, H / 2])
+
+
+def flutes_x(x0, x1):
+    n = int((x1 - x0 - 2) // FLUTE_P)
+    start = x0 + (x1 - x0 - n * FLUTE_P) / 2
+    fc = flute_cutter()
+    return Manifold.batch_boolean([fc.translate([start + i * FLUTE_P, 0, 0])
+                                   for i in range(n + 1)], OpType.Add)
+
+
+def styled_arm(x0, x1):
+    top_band = box(x0 - 1, -SLANT - 5, H - R_TOP - 1, x1 + 1, 3, H + 5)  # sem friso na quina
+    return extrude_x(profile_cs(), x0, x1) - (flutes_x(x0, x1) - top_band)
+
+
 def beam(L):
     gx = L / 2
-    b = box(0, 0, 0, L, BW, H)
+    b = styled_arm(0, L)
     b = b - pockets_along(END_SOLID, L - END_SOLID, [gx]) - groove(gx)
     return b - half_slot(0, -1, KEY_C) - half_slot(L, +1, KEY_C)
 
 
 def corner():
-    ax = box(0, 0, 0, ARM, BW, H)
-    ay = box(0, 0, 0, BW, ARM, H)
+    # quina arredondada: perfil girado 90 graus em torno do eixo (BW, BW)
+    prof = profile_cs()
+    radial = CrossSection([[(BW - y, z) for y, z in poly][::-1] for poly in prof.to_polygons()])
+    rev = Manifold.revolve(radial, 160, 90).rotate([0, 0, 180]).translate([BW, BW, 0])
+    # frisos radiais na quina
+    rm = BW + SLANT / 2
+    n = max(2, round((math.pi / 2 * rm) / FLUTE_P))
+    fc = flute_cutter().translate([0, -BW, 0])                 # face a -BW do eixo
+    cut = [fc.rotate([0, 0, -(i + 0.5) * 90 / n]).translate([BW, BW, 0]) for i in range(n)]
+    top_ring = Manifold.cylinder(10, BW + 20, BW + 20, 160).translate([BW, BW, H - R_TOP - 1])
+    rev = rev - (Manifold.batch_boolean(cut, OpType.Add) - top_ring)
+    ax = styled_arm(BW, ARM)
+    ay = ax.mirror([1, -1, 0])
     g = prism([(BW, BW), (BW + GUSSET, BW), (BW, BW + GUSSET)], H)
-    c = ax + ay + g
+    c = rev + ax + ay + g
     cut = pockets_along(BW + WALL, ARM - END_SOLID, [CORNER_GROOVE_X]) \
         + groove(CORNER_GROOVE_X) + half_slot(ARM, +1, KEY_C)
     return c - cut - cut.mirror([1, -1, 0])
@@ -154,7 +225,10 @@ def stop():
     guide = prism([(CAP_L - 4, H + CAP_H + 1), (CAP_L + 1, H + CAP_H + 1),
                    (CAP_L + 1, H + CAP_H - 5)], CAP_W + 2, -(CAP_W / 2 + 1))
     guide = guide.rotate([90, 0, 0]).rotate([0, 0, 90]).mirror([1, 0, 0])
-    return tongue + cap - guide
+    # frisos verticais na face externa do batente (mesmo estilo da moldura)
+    fl = [Manifold.cylinder(CAP_H - 4, 1.1, 1.1, 16).translate([x, 0, H + 3])
+          for x in (-10, -5, 0, 5, 10)]
+    return tongue + cap - guide - Manifold.batch_boolean(fl, OpType.Add)
 
 
 def to_trimesh(m):
@@ -208,7 +282,7 @@ def frame_and_stops(stop_pos=None):
 if __name__ == "__main__":
     travel = GL - TONGUE_L
     lo, hi = CAP_L, CAP_L + travel
-    print(f"Moldura externa: {W_OUT:.1f} x {D_OUT:.1f} mm, altura {H} mm (+{CAP_H} mm batentes)")
+    print(f"Moldura externa (base): {W_OUT+2*SLANT:.1f} x {D_OUT+2*SLANT:.1f} mm, altura {H} mm (+{CAP_H} mm batentes)")
     print(f"Ajuste: {travel/PITCH:.0f} cliques de {PITCH} mm por batente "
           f"-> aceita gabinete de {W_OUT-2*hi:.1f} a {W_OUT-2*lo:.1f} mm de largura "
           f"e {D_OUT-2*hi:.1f} a {D_OUT-2*lo:.1f} mm de profundidade")
